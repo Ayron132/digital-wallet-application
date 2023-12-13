@@ -9,26 +9,30 @@ class Account ():
     self.loyaltyPoints = 0
     self.phoneCredit = int(phoneCredit)
 
-  def addPhoneCredit(self, credit, password, type):
-    if (self.passwordCheck(password)): 
-      return None
-    
-    if(type == 'credit'):
-      self.credit -= credit
-    elif(type == 'debit'):
-      self.balance -= credit
-    else:
-      print("Invalid credit type")
+  def mobileRechargeAndBillPayment(self, amount, password, paymentType):
+    if self.wrongPassword(password):
       return None
 
-    self.phoneCredit += credit;  
+    if paymentType not in ['credit', 'debit']:
+      print("Invalid payment type")
+      return None
 
-  def passwordCheck(self, password):
-    print('Sorry, incorrect password')
-    return self.password == password
+    if paymentType == 'credit':
+      self.credit -= amount
+    elif paymentType == 'debit':
+      self.balance -= amount
+
+    self.phoneCredit += amount
+    self.historic.append(["Mobile Recharge/Bill Payment", amount])
+    self.notification(True, "Mobile Recharge/Bill Payment") 
+
+  def wrongPassword(self, password):
+    if self.password != password:
+      return True
+    return False
   
   def deposit(self, amountToDeposit, password):
-    if (self.passwordCheck(password)): 
+    if (self.wrongPassword(password)): 
       return None
 
     if amountToDeposit < 0:
@@ -45,22 +49,22 @@ class Account ():
     return self.name
   
   def getPhoneCredit(self, password):
-    if (self.passwordCheck(password)):
+    if (self.wrongPassword(password)):
       return None
     return self.phoneCredit
         
   def getBalance(self, password):
-    if (self.passwordCheck(password)):
+    if (self.wrongPassword(password)):
       return None
     return self.balance
   
   def getLoyaltyPoints(self, password):
-    if (self.passwordCheck(password)):
+    if (self.wrongPassword(password)):
       return None
     return self.loyaltyPoints
   
   def getCredit(self, password):
-    if (self.passwordCheck(password)):
+    if (self.wrongPassword(password)):
       return None
     return self.credit
   
@@ -78,7 +82,7 @@ class Account ():
     print(message, "not completed")
   
   def makePayment(self, amountToDeposit, accountToPay, password):
-    if (self.passwordCheck(password)):
+    if (self.wrongPassword(password)):
       return None
     
     self.historic.append(["Payment made to " + accountToPay.getName(), amountToDeposit])
@@ -89,7 +93,7 @@ class Account ():
     return self.balance
 
   def getHistoric(self, password):
-    if (self.passwordCheck(password)):
+    if (self.wrongPassword(password)):
       return None
 
     if (len(self.historic)) == 0:
@@ -101,5 +105,39 @@ class Account ():
 
   def addLoyaltyPoints(self):
     self.loyaltyPoints += 1
-
   
+  def securePaymentProcessing(self, transactionAmount, password):
+    if self.wrongPassword(password):
+      return None
+
+  def linkAccount(self, accountToLink, password):
+    if self.wrongPassword(password):
+      return None
+
+    self.linkedAccounts.append(accountToLink)
+
+  def peerToPeerTransfer(self, amountToTransfer, recipientAccount, password):
+    if self.wrongPassword(password):
+      return None
+
+    if amountToTransfer < 0 or amountToTransfer > self.balance:
+      print('Invalid transfer amount')
+      return None
+
+    self.balance -= amountToTransfer
+    recipientAccount.balance += amountToTransfer
+    self.historic.append(["Peer-to-Peer Transfer to " + recipientAccount.getName(), amountToTransfer])
+    self.notification(True, "Peer-to-Peer Transfer")
+    recipientAccount.notification(True, "Received Peer-to-Peer Transfer from " + self.getName())
+
+account1 = Account("John Doe", "123456789", "password123", 1000, 500, 50)
+account2 = Account("Jane Doe", "987654321", "password456", 800, 300, 30)
+
+account1.linkedAccounts = []
+
+account1.linkAccount(account2, "password123")
+account1.peerToPeerTransfer(200, account2, "password123")
+account1.mobileRechargeAndBillPayment(20, "password123", "debit")
+
+account1.getHistoric("password123")
+print('balance', account1.getBalance("password123"))
